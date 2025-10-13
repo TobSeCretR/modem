@@ -1,15 +1,31 @@
-# 5g-modem
+# 5G Modem Interface for Raspberry Pi 5 (Quectel RM520N-GL)
 
-This project is designed to interface with a 5G modem on a Raspberry Pi 5 running Ubuntu 24.04.3 LTS.
+This open-source Python project provides a lightweight and practical solution for interfacing with a **5G modem**—specifically the **Quectel RM520N-GL**—on a **Raspberry Pi 5** running **Ubuntu 24.04.3 LTS**. It enables 5G/LTE internet connectivity, GPS access, and SMS messaging using **AT commands** or Python-based scripts.
+
+Ideal for IoT, embedded Linux, or mobile networking projects.
+
+---
 
 ## Supported Hardware
 
 - **Modem:** Quectel RM520N-GL  
-- **Revision:** RM520NGLAAR03A03M4G
+- **Revision:** RM520NGLAAR03A03M4G  
+- **Platform:** Raspberry Pi 5  
+- **Operating System:** Ubuntu 24.04.3 LTS
+
+---
 
 ## Overview
 
-This software facilitates communication and control of the Quectel RM520N-GL 5G modem using AT commands or other interfaces on a Raspberry Pi 5 with Ubuntu 24.04.3 LTS.
+This software enables full communication and control of the **Quectel RM520N-GL 5G modem** via **AT commands** or other serial interfaces. It's tailored for **Raspberry Pi 5** setups but can be adapted to other Linux SBCs or embedded systems.
+
+---
+
+Common use cases include:
+- Enabling cellular internet access (5G/LTE)
+- Sending/receiving SMS
+- Retrieving GPS coordinates
+- Automating modem interaction via scripts
 
 ## Requirements
 
@@ -18,8 +34,27 @@ This software facilitates communication and control of the Quectel RM520N-GL 5G 
 - Quectel RM520N-GL modem (Revision: RM520NGLAAR03A03M4G)
 - Appropriate USB/serial connection to modem (e.g., `/dev/ttyUSB2`)
 
-## Usage
+---
 
+## Features
+- Set up and manage 5G or LTE internet connections
+- Send and receive SMS messages
+- Access GPS (GNSS) data from the modem
+- Seamless integration with Raspberry Pi environment
+- Use AT commands or automate via Python
+
+---
+
+## Technologies
+- Python 3
+- PySerial (or other serial tools)
+- AT Command Protocol
+- 5G, LTE, GPS (GNSS)
+- Linux (Ubuntu 24.04.3)
+
+---
+
+## Usage
 1. Connect the modem to the Raspberry Pi.
 2. Identify the device path (e.g., `/dev/ttyUSB2`).
 3. Use serial communication tools (like `minicom`) to send AT commands:
