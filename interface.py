@@ -17,11 +17,11 @@ class ModemInterface:
         timeout: int = 1,
         interface: str = "wwan0",
     ):
-        self.qmi = Path(qmi)
-        self.ttyUSB1 = Path(ttyUSB1)
-        self.ATCommand = Path(ATCommand)
-        self.ttyUSB3 = Path(ttyUSB3)
-        self.ttyUSB4 = Path(ttyUSB4)
+        self.qmi = qmi
+        self.ttyUSB1 = ttyUSB1
+        self.ATCommand = ATCommand
+        self.ttyUSB3 = ttyUSB3
+        self.ttyUSB4 = ttyUSB4
         self.apn = apn
         self.baudrate = baudrate
         self.timeout = timeout
@@ -53,7 +53,7 @@ class ModemInterface:
             logging.info(f"Output: {result.stdout.strip()}")
         if result.stderr:
             logging.warning(f"Error: {result.stderr.strip()}")
-        return result
+        return result.stdout or ""
 
     def get_operating_mode(self):
         output = self.run_command(
@@ -69,9 +69,7 @@ class ModemInterface:
             logging.info("Modem is already online.")
 
     def check_sim_status(self):
-        output = self.run_command(
-            ["qmicli", "-d", self.qmi, "--uim-get-card-status"]
-        )
+        output = self.run_command(["qmicli", "-d", self.qmi, "--uim-get-card-status"])
         if "PIN1 (enabled, not verified)" in output:
             logging.info("SIM requires PIN. Sending PIN...")
             self.run_command(
@@ -83,12 +81,13 @@ class ModemInterface:
         else:
             logging.warning("Unexpected SIM status. Proceeding cautiously.")
 
-    def check_registration(self):
+    def check_registration(self) -> bool:
         output = self.run_command(
             ["qmicli", "-d", self.qmi, "--nas-get-registration-state"]
         )
         if "registration state: 'registered'" in output.lower():
             logging.info("Modem is registered to network.")
+            return True
         else:
             logging.info("Modem not registered. Retrying...")
             for i in range(5):
@@ -98,8 +97,9 @@ class ModemInterface:
                 )
                 if "registration state: 'registered'" in output.lower():
                     logging.info("Modem is now registered.")
-                    return
-            raise RuntimeError("Modem failed to register to network.")
+                    return True
+            logging.warning("Modem failed to register after retries.")
+            return False
 
     def start_network(self):
         output = self.run_command(
@@ -116,7 +116,7 @@ class ModemInterface:
         else:
             raise RuntimeError("Failed to start network session.")
 
-    def get_connection_info(self):
+    def connect(self) -> bool:
         output = self.run_command(
             ["qmicli", "-d", self.device, "--wds-get-current-settings"]
         )
@@ -134,10 +134,16 @@ class ModemInterface:
         self.check_sim_status()
 
         logging.info("[STEP] Checking network registration...")
-        self.check_registration()
+        if not self.check_registration():
+            logging.error(
+                "Modem is not registered to the network. Aborting connection attempt."
+            )
+            return False
 
         logging.info("[STEP] Starting network session...")
-        self.start_network()
+        if not self.start_network():
+            logging.error("Failed to start network session.")
+            return False
 
         logging.info("[STEP] Getting session details...")
         self.get_connection_info()
@@ -146,3 +152,4 @@ class ModemInterface:
         self.configure_interface()
 
         logging.info("[DONE] WWAN connection should now be up.")
+        return True

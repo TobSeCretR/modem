@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-import time
 import logging
-from service import ServiceManager
 from modem.card import SIM
 from modem.interface import ModemInterface
-from modem.serial import Serial
+from serial import Serial
 from modem.at import AT
 
 # Setup logging
@@ -57,8 +55,8 @@ if __name__ == "__main__":
         apn=sim.apn,
     )
 
-modem = Modem(sim, rm520_modem)
-modem.connect()
-modem.send_sms(
-    phone="+491606128400", text="Hallo, this is a test SMS sent from Modem class."
-)
+    modem = Modem(sim, rm520_modem)
+    modem.connect()
+    modem.send_sms(
+        phone="+491606128400", text="Hallo, this is a test SMS sent from Modem class."
+    )
