@@ -40,7 +40,7 @@ This software facilitates communication and control of the Quectel RM520N-GL 5G 
 2. AT+CLCK="SC",0,"1234" - Disables SIM PIN lock. Replace "1234" with your SIM PIN.
 3. AT+CLCK="SC",1,"1234" - Enables SIM PIN lock.
 
-### Write custom script
+### Write Custom Script
 ```python
 #!/usr/bin/env python3
 
