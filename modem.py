@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
+import os
+from datetime import datetime
 from modem.card import SIM
 from modem.interface import ModemInterface
 from modem.serial import Serial
@@ -19,15 +21,48 @@ class Modem:
         self.interface = interface
         self.serial = Serial(interface)
         self.at = AT(self.serial.serial_conn)
+        self.sms_flag_file = "/tmp/sms_sent_once"
 
     def connect(self):
         self.interface.connect()
+
+    def is_internet_up(self) -> bool:
+        return self.interface.run_command(cmd=f"ping -c 2 8.8.8.8")
+
+    def monitor_connection(self, check_interval=30):
+        while True:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            if not self.is_internet_up():
+                if not self.has_sms_been_sent():
+                    print(f"{now}: Internet down. Restarting PPP and sending SMS.")
+                    self.restart_ppp()
+                    self.send_sms(f"PPP restarted at {now}")
+                    self.mark_sms_sent()
+                else:
+                    print(f"{now}: Internet down. SMS already sent. Skipping.")
+            else:
+                if self.has_sms_been_sent():
+                    self.clear_sms_sent_flag()
+                    print(f"{now}: Internet back. SMS flag cleared.")
+                else:
+                    print(f"{now}: Internet up and running.")
+            time.sleep(check_interval)
 
     def send_sms(self, phoneNumber, text):
         self.at.send_sms(phoneNumber, text)
 
     def receive_sms(self):
         raise NotImplementedError("Receive Sms is not yet implemented.")
+
+    def has_sms_been_sent(self):
+        return os.path.exists(self.sms_flag_file)
+
+    def mark_sms_sent(self):
+        open(self.sms_flag_file, "a").close()
+
+    def clear_sms_sent_flag(self):
+        if os.path.exists(self.sms_flag_file):
+            os.remove(self.sms_flag_file)
 
     def get_gps_coordinates(self):
         """
@@ -50,7 +85,7 @@ if __name__ == "__main__":
             pin="0955",
             puk="91904144",
             apn="o2.de",
-        )
+        ),
     )
 
     modem = Modem(rm520_modem)

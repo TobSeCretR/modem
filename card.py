@@ -6,10 +6,12 @@ class SIM:
         self.apn = apn
 
     def __str__(self):
-        return (f"SIMCard(phone_number={self.phone_number}, "
-                f"PIN={'*' * len(self.pin)}, "
-                f"PUK={'*' * len(self.puk)}, "
-                f"APN={self.apn})")
+        return (
+            f"SIMCard(phone_number={self.phone_number}, "
+            f"PIN={'*' * len(self.pin)}, "
+            f"PUK={'*' * len(self.puk)}, "
+            f"APN={self.apn})"
+        )
 
     def unlock(self, pin):
         if pin == self.pin:
@@ -23,4 +25,3 @@ class SIM:
             return "PIN reset successfully."
         else:
             return "Invalid PUK. Cannot reset PIN."
-
