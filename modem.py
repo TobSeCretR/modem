@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 from datetime import datetime
 from modem.card import SIM
 from modem.interface import ModemInterface
@@ -34,22 +35,27 @@ class Modem:
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if not self.is_internet_up():
                 if not self.has_sms_been_sent():
-                    print(f"{now}: Internet down. Restarting PPP and sending SMS.")
-                    self.restart_ppp()
-                    self.send_sms(f"PPP restarted at {now}")
+                    logging.warning(
+                        f"{now}: Internet down. Restarting PPP and sending SMS."
+                    )
+                    self.at.restart_ppp()
+                    self.at.send_sms(
+                        phoneNumber=self.interface.sim.phone_number,
+                        text=f"PPP restarted at {now}",
+                    )
                     self.mark_sms_sent()
                 else:
-                    print(f"{now}: Internet down. SMS already sent. Skipping.")
+                    logging.info(f"{now}: Internet down. SMS already sent. Skipping.")
             else:
                 if self.has_sms_been_sent():
                     self.clear_sms_sent_flag()
-                    print(f"{now}: Internet back. SMS flag cleared.")
+                    logging.info(f"{now}: Internet back. SMS flag cleared.")
                 else:
-                    print(f"{now}: Internet up and running.")
+                    logging.debug(f"{now}: Internet up and running.")
             time.sleep(check_interval)
 
     def send_sms(self, phoneNumber, text):
-        self.at.send_sms(phoneNumber, text)
+        self.at.send_sms(phoneNumber=phoneNumber, text=text)
 
     def receive_sms(self):
         raise NotImplementedError("Receive Sms is not yet implemented.")

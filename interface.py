@@ -57,14 +57,14 @@ class ModemInterface:
         else:
             logging.info("Running as root.")
 
-    def run_command(self, cmd) -> bool:
+    def run_command(self, cmd):
         logging.info(f"Running: {cmd}")
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.stdout:
             logging.info(f"Output: {result.stdout.strip()}")
         if result.stderr:
             logging.warning(f"Error: {result.stderr.strip()}")
-        return result.returncode == 0  # True if success
+        return result.stdout or ""
 
     def get_operating_mode(self):
         output = self.run_command(

@@ -12,7 +12,6 @@ class AT:
         self.serial: serial.Serial = connection
 
     def send_cmd(self, cmd, wait=1):
-        """Send an AT command to the modem and return the response."""
         full_cmd = cmd + "\r"
         self.serial.write(full_cmd.encode())
         time.sleep(wait)
@@ -43,12 +42,22 @@ class AT:
         except Exception as e:
             logger.error(f"Error sending SMS: {e}")
             self.serial.close()
+        finally:
+            if self.serial.is_open:
+                self.serial.close()
 
     def restart_ppp(self):
-        """Restart the PPP modem by sending AT command via serial."""
         try:
-            with serial.Serial(self.serial_device, baudrate=115200, timeout=1) as ser:
-                ser.write(b"AT+CFUN=1,1\r")  # Restart the modem
-                print(f"[INFO] Sent modem reset command via AT+CFUN.")
-        except serial.SerialException as e:
-            print(f"[ERROR] Failed to access serial device {self.serial_device}: {e}")
+            self.serial.write("AT+CFUN=1,1\r".encode())
+            logger.info("Waiting for modem to reboot...")
+            time.sleep(20)  # Wait for message to send
+            response = self.serial.read_all().decode(errors="ignore")
+            logger.info(
+                f"--- Final response ---\n{response.strip()}\n----------------------"
+            )
+        except Exception as e:
+            logger.error(f"Error sending SMS: {e}")
+            self.serial.close()
+        finally:
+            if self.serial.is_open:
+                self.serial.close()
