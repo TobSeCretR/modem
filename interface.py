@@ -16,7 +16,7 @@ class ModemInterface:
         ttyUSB4: str,
         sim: SIM,
         baudrate: int = 115200,
-        timeout: int = 1,
+        timeout: int = 5,
         interface: str = "wwan0",
     ):
         self.qmi = qmi
@@ -119,9 +119,27 @@ class ModemInterface:
         output =  self.run_command(cmd = f"sudo qmicli -d {self.qmi} --wds-get-current-settings")
         logging.info("Connection settings:\n" + output)
 
+    def set_raw_ip_mode(self):
+        raw_ip_path = f"/sys/class/net/{self.interface}/qmi/raw_ip"
+        if Path(raw_ip_path).exists():
+            logging.info(f"Enabling raw-ip mode on {self.interface}...")
+            try:
+                with open(raw_ip_path, "w") as f:
+                    f.write("Y\n")
+            except PermissionError:
+                logging.error("Permission denied while setting raw-ip mode. Are you root?")
+                sys.exit(1)
+        else:
+            logging.warning(f"Raw IP sysfs path does not exist: {raw_ip_path}. Skipping.")
+    
     def configure_interface(self):
-        logging.info(f"Running DHCP client on {self.interface}...")
+        logging.info(f"Setting raw-ip mode for {self.interface}...")
+        self.set_raw_ip_mode()
+
+        logging.info(f"Bringing up interface {self.interface}...")
         self.run_command(cmd = f"sudo ip link set {self.interface} up")
+
+        logging.info(f"Requesting IP address via DHCP on {self.interface}...")
         self.run_command(cmd = f"sudo udhcpc -i {self.interface}")
 
     def connect(self):

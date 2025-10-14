@@ -27,7 +27,7 @@ class Serial:
         return True
 
     def open_serial(self) -> serial.Serial:
-        """Open the serial connection using modem settings."""
+        self.logger.debug(f"Opening serial with: port={self.modem.ATCommand}, baudrate={self.modem.baudrate}, timeout={self.modem.timeout}")
         try:
             serial_conn = serial.Serial(
                 port=self.modem.ATCommand,
