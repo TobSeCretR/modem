@@ -38,7 +38,8 @@ class Modem:
                     logging.warning(
                         f"{now}: Internet down. Restarting PPP and sending SMS."
                     )
-                    self.at.restart_ppp()
+                    #self.at.restart_ppp()
+                    self.connect()
                     self.at.send_sms(
                         phoneNumber=self.interface.sim.phone_number,
                         text=f"PPP restarted at {now}",
@@ -79,7 +80,6 @@ class Modem:
 
 
 if __name__ == "__main__":
-
     rm520_modem = ModemInterface(
         qmi="/dev/cdc-wdm0",
         ttyUSB1="/dev/ttyUSB1",
@@ -95,7 +95,5 @@ if __name__ == "__main__":
     )
 
     modem = Modem(rm520_modem)
-    modem.connect()
-    modem.send_sms(
-        phone="+491606128400", text="Hallo, this is a test SMS sent from Modem class."
-    )
+    #modem.connect()
+    modem.send_sms(phoneNumber=rm520_modem.sim.phone_number, text="wichtige Information")

@@ -66,6 +66,18 @@ class ModemInterface:
             logging.warning(f"Error: {result.stderr.strip()}")
         return result.stdout or ""
 
+    def reset_modem(self):
+        logging.info("Resetting the modem...")
+        output = self.run_command(
+            cmd=f"sudo qmicli -d {self.qmi} --dms-set-operating-mode=reset"
+        )
+        if "error" in output.lower():
+            logging.warning("Failed to reset modem.")
+        else:
+            logging.info("Modem reset command issued successfully.")
+
+        time.sleep(5)  # Allow time for the modem to reboot
+
     def get_operating_mode(self):
         output = self.run_command(
             cmd=f"sudo qmicli -d {self.qmi} --dms-get-operating-mode"
@@ -119,7 +131,7 @@ class ModemInterface:
 
     def start_network(self):
         output = self.run_command(
-            cmd=f"sudo qmicli -d {self.qmi} --wds-start-network=apn={self.sim.apn} --client-no-release-cid"
+            cmd=f"sudo qmicli -d {self.qmi} --wds-start-network=\"apn={self.sim.apn},ip-type='4,6'\" --client-no-release-cid"
         )
         if (
             "network started" in output.lower()
@@ -197,3 +209,73 @@ class ModemInterface:
 
         logging.info("[DONE] WWAN connection should now be up.")
         return True
+
+###to do
+# phone call
+
+# 	send_at('ATD'+phone_number+';','OK',1)
+# 	time.sleep(20)
+# 	ser.write('AT+CHUP\r\n'.encode())
+
+# def SendShortMessage(phone_number,text_message):
+	
+# 	print("Setting SMS mode...")
+# 	send_at("AT+CMGF=1","OK",1)
+# 	print("Sending Short Message")
+# 	answer = send_at("AT+CMGS=\""+phone_number+"\"",">",2)
+# 	if 1 == answer:
+# 		ser.write(text_message.encode())
+# 		ser.write(b'\x1A')
+# 		answer = send_at('','OK',20)
+# 		if 1 == answer:
+# 			print('send successfully')
+# 		else:
+# 			print('error')
+# 	else:
+# 		print('error%d'%answer)
+
+# def ReceiveShortMessage():
+# 	rec_buff = ''
+# 	print('Setting SMS mode...')
+# 	send_at('AT+CMGF=1','OK',1)
+# 	send_at('AT+CPMS=\"SM\",\"SM\",\"SM\"', 'OK', 1)
+# 	answer = send_at('AT+CMGR=1','+CMGR:',2)
+# 	if 1 == answer:
+# 		answer = 0
+# 		if 'OK' in rec_buff:
+# 			answer = 1
+# 			print(rec_buff)
+# 	else:
+# 		print('error%d'%answer)
+# 		return False
+# 	return True
+
+
+##iot tcp connection
+# rec_buff = ''
+# APN = 'CMNET'
+# ServerIP = '118.190.93.84'
+# Port = '2317'
+# Message = 'Waveshare'
+
+
+
+# try:
+# 	power_on(power_key)
+# 	send_at('AT+CSQ','OK',1)
+# 	send_at('AT+CREG?','+CREG: 0,1',1)
+# 	send_at('AT+CPSI?','OK',1)
+# 	send_at('AT+CGREG?','+CGREG: 0,1',0.5)
+# 	send_at('AT+CGSOCKCONT=1,\"IP\",\"'+APN+'\"','OK',1)
+# 	send_at('AT+CSOCKSETPN=1', 'OK', 1)
+# 	send_at('AT+CIPMODE=0', 'OK', 1)
+# 	send_at('AT+NETOPEN', '+NETOPEN: 0',5)
+# 	send_at('AT+IPADDR', '+IPADDR:', 1)
+# 	send_at('AT+CIPOPEN=0,\"TCP\",\"'+ServerIP+'\",'+Port,'+CIPOPEN: 0,0', 5)
+# 	send_at('AT+CIPSEND=0,', '>', 2)#If not sure the message number,write the command like this: AT+CIPSEND=0, (end with 1A(hex))
+# 	ser.write(Message.encode())
+# 	if 1 == send_at(b'\x1a'.decode(),'OK',5):
+# 		print('send message successfully!')
+# 	send_at('AT+CIPCLOSE=0','+CIPCLOSE: 0,0',15)
+# 	send_at('AT+NETCLOSE', '+NETCLOSE: 0', 1)
+# 	power_down(power_key)

@@ -16,7 +16,9 @@ class Serial:
 
     def serialAvailable(self) -> bool:
         try:
-            output = subprocess.check_output(["sudo", "lsof", self.modem.ATCommand], text=True)
+            output = subprocess.check_output(
+                ["sudo", "lsof", self.modem.ATCommand], text=True
+            )
             if output.strip():  # If there's any output, the port is in use
                 self.logger.info(
                     f"Serial port {self.modem.ATCommand} is in use by the following processes:\n{output}"
@@ -27,16 +29,16 @@ class Serial:
         return True
 
     def open_serial(self) -> serial.Serial:
-        self.logger.debug(f"Opening serial with: port={self.modem.ATCommand}, baudrate={self.modem.baudrate}, timeout={self.modem.timeout}")
+        self.logger.debug(
+            f"Opening serial with: port={self.modem.ATCommand}, baudrate={self.modem.baudrate}, timeout={self.modem.timeout}"
+        )
         try:
             serial_conn = serial.Serial(
                 port=self.modem.ATCommand,
                 baudrate=self.modem.baudrate,
-                timeout=self.modem.timeout
+                timeout=self.modem.timeout,
             )
-            self.logger.info(
-                f"Opened serial port {serial_conn.port} successfully."
-            )
+            self.logger.info(f"Opened serial port {serial_conn.port} successfully.")
             return serial_conn
         except serial.SerialException as e:
             self.logger.error(f"Could not open serial port: {e}")
