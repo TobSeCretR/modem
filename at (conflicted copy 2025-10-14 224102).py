@@ -1,7 +1,7 @@
 import time
 import serial
 import logging
-from modem.GPSInfo import GPSInfo
+from modem.gps import GPSInfo
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class AT:
 
         try:
             # Check GPS power status first
-            gps_power_on = self.check_gps_power_status() #AT+QGPS?
+            gps_power_on = self.check_gps_power_status()
 
             if gps_power_on is False:
                 self.send_cmd("AT+CGNSPWR=1")  # Power on GNSS
@@ -111,7 +111,7 @@ class AT:
 
         try:
             self.send_cmd("AT")
-            self.send_cmd("AT+QGPS=1")  # Power on GNSS 
+            self.send_cmd("AT+CGNSPWR=1")  # Power on GNSS
             time.sleep(2)
     
             response = self.send_cmd("AT+CGNSINF")  # Get GNSS info
@@ -130,7 +130,7 @@ class AT:
                 logger.warning("GPS data not available or fix not acquired.")
             
             # Turn off GNSS after usage
-            self.send_cmd("AT+QGPS=0")
+            self.send_cmd("AT+CGNSPWR=0")
 
             return gps
     
