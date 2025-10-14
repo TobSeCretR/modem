@@ -2,7 +2,9 @@ from pathlib import Path
 import subprocess
 import time
 import logging
-
+import os
+import sys
+from modem.card import SIM
 
 class ModemInterface:
     def __init__(
@@ -12,7 +14,7 @@ class ModemInterface:
         ATCommand: str,
         ttyUSB3: str,
         ttyUSB4: str,
-        apn: str,
+        sim: SIM,
         baudrate: int = 115200,
         timeout: int = 1,
         interface: str = "wwan0",
@@ -22,10 +24,11 @@ class ModemInterface:
         self.ATCommand = ATCommand
         self.ttyUSB3 = ttyUSB3
         self.ttyUSB4 = ttyUSB4
-        self.apn = apn
+        self.sim = sim
         self.baudrate = baudrate
         self.timeout = timeout
         self.interface = interface
+        self.check_sudo()
 
     def all_devices_exist(self) -> bool:
         return all(
@@ -45,6 +48,13 @@ class ModemInterface:
             f"ATCommand={self.ATCommand}, ttyUSB3={self.ttyUSB3}, "
             f"ttyUSB4={self.ttyUSB4}, baudrate={self.baudrate})"
         )
+    
+    def check_sudo(self):
+        if os.geteuid() != 0:
+            logging.error("This script must be run with sudo/root privileges.")
+            sys.exit(1)
+        else:
+            logging.info("Running as root.")
 
     def run_command(self, cmd):
         logging.info(f"Running: {cmd}")
@@ -56,45 +66,36 @@ class ModemInterface:
         return result.stdout or ""
 
     def get_operating_mode(self):
-        output = self.run_command(
-            ["qmicli", "-d", self.qmi, "--dms-get-operating-mode"]
-        )
+        output = self.run_command(cmd = f"sudo qmicli -d {self.qmi} --dms-get-operating-mode")
         if "offline" in output.lower():
             logging.info("Modem is offline. Switching to online mode...")
-            self.run_command(
-                ["qmicli", "-d", self.qmi, "--dms-set-operating-mode=online"]
-            )
+            self.run_command(cmd = f"sudo qmicli -d {self.qmi} --dms-set-operating-mode=online")
             time.sleep(2)  # Give it a moment to come online
         else:
             logging.info("Modem is already online.")
 
     def check_sim_status(self):
-        output = self.run_command(["qmicli", "-d", self.qmi, "--uim-get-card-status"])
-        if "PIN1 (enabled, not verified)" in output:
+        output = self.run_command(cmd = f"sudo qmicli -d {self.qmi} --uim-get-card-status")
+        if "PIN1 state: 'enabled, not verified'" in output:
             logging.info("SIM requires PIN. Sending PIN...")
-            self.run_command(
-                ["qmicli", "-d", self.qmi, f"--uim-verify-pin=PIN1,{self.pin}"]
-            )
+            self.run_command(cmd = f"sudo qmicli -d {self.qmi} --uim-verify-pin=PIN1,{self.sim.pin}")
             time.sleep(2)
-        elif "PIN1 (disabled)" in output or "verified" in output:
+        elif "PIN1 state: 'disabled'" in output or "Application state: 'ready'" in output:
             logging.info("SIM is ready.")
         else:
             logging.warning("Unexpected SIM status. Proceeding cautiously.")
 
     def check_registration(self) -> bool:
-        output = self.run_command(
-            ["qmicli", "-d", self.qmi, "--nas-get-registration-state"]
-        )
+        output = self.run_command(cmd = f"sudo qmicli -d {self.qmi} --nas-get-serving-system")
+        time.sleep(2)
         if "registration state: 'registered'" in output.lower():
             logging.info("Modem is registered to network.")
             return True
         else:
             logging.info("Modem not registered. Retrying...")
-            for i in range(5):
+            for i in range(3):
                 time.sleep(3)
-                output = self.run_command(
-                    ["qmicli", "-d", self.qmi, "--nas-get-registration-state"]
-                )
+                output = self.run_command(cmd = f"sudo qmicli -d {self.qmi} --nas-get-serving-system")
                 if "registration state: 'registered'" in output.lower():
                     logging.info("Modem is now registered.")
                     return True
@@ -102,29 +103,26 @@ class ModemInterface:
             return False
 
     def start_network(self):
-        output = self.run_command(
-            [
-                "qmicli",
-                "-d",
-                self.qmi,
-                f"--wds-start-network=apn={self.apn}",
-                "--client-no-release-cid",
-            ]
-        )
-        if "successfully started network" in output.lower():
+        output = self.run_command(cmd = f"sudo qmicli -d {self.qmi} --wds-start-network=apn={self.sim.apn} --client-no-release-cid")
+        if "network started" in output.lower() and "packet data handle" in output.lower():
             logging.info("Network session started.")
+            return True
         else:
-            raise RuntimeError("Failed to start network session.")
+            logging.error("Failed to start network session.")
+            return True
+
+    def get_connection_info(self):
+        output = self.run_command(cmd=f"sudo qmicli -d {self.qmi} --wds-get-current-settings")
+        logging.info("Connection info retrieved:\n" + output)
 
     def connect(self) -> bool:
-        output = self.run_command(
-            ["qmicli", "-d", self.device, "--wds-get-current-settings"]
-        )
+        output =  self.run_command(cmd = f"sudo qmicli -d {self.qmi} --wds-get-current-settings")
         logging.info("Connection settings:\n" + output)
 
     def configure_interface(self):
         logging.info(f"Running DHCP client on {self.interface}...")
-        self.run_command(["udhcpc", "-i", self.interface])
+        self.run_command(cmd = f"sudo ip link set {self.interface} up")
+        self.run_command(cmd = f"sudo udhcpc -i {self.interface}")
 
     def connect(self):
         logging.info("[STEP] Checking modem operating mode...")

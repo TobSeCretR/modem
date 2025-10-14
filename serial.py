@@ -5,9 +5,10 @@ from modem.interface import ModemInterface
 
 
 class Serial:
-    def __init__(self, modem):
-        self.modem: ModemInterface = modem
+    def __init__(self, modem: ModemInterface):
+        self.modem = modem
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.serial_conn = None
         if self.serialAvailable():
             self.serial_conn = self.open_serial()
         else:
@@ -29,11 +30,12 @@ class Serial:
         """Open the serial connection using modem settings."""
         try:
             serial_conn = serial.Serial(
-                self.modem.ATCommand, self.modem.baudrate, self.modem.timeout
+                port=self.modem.ATCommand,
+                baudrate=self.modem.baudrate,
+                timeout=self.modem.timeout
             )
-            serial.Serial(self.serial_device, baudrate=115200, timeout=1) as ser:
             self.logger.info(
-                f"Opened serial port {self.serial_conn.port} successfully."
+                f"Opened serial port {serial_conn.port} successfully."
             )
             return serial_conn
         except serial.SerialException as e:
