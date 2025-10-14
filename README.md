@@ -103,5 +103,13 @@ modem.connect()
 gc.collect()
 ```
 
-
-
+## Coming Functionlity
+Planned features for future releases:
+- IoT Integration
+Support for sending sensor or device data over cellular networks to cloud platforms (e.g., MQTT, HTTP, or CoAP support).
+- Enhanced GPS (GNSS)
+More robust GPS handling including periodic location tracking, NMEA sentence parsing, and integration with mapping APIs.
+- FTP Support
+Enable file uploads/downloads over FTP directly via the modem for lightweight remote data transfer.
+- TCP/UDP Socket Communication
+Create raw TCP or UDP socket connections via the modem, enabling advanced use cases like remote device control or telemetry.
