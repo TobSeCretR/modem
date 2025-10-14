@@ -79,27 +79,28 @@ Common use cases include:
 ```python
 #!/usr/bin/env python3
 
+import gc
 from modem.interface import ModemInterface
 from modem.card import SIM
 from modem.modem import Modem
 
-sim = SIM(
-    phone_number="+49160xxx",
-    pin="xxxx",
-    puk="xxxx",
-    apn="o2.de",
-)
-
 rm520_modem = ModemInterface(
-    wwan0="/dev/cdc-wdm0",
+    qmi="/dev/cdc-wdm0",
     ttyUSB1="/dev/ttyUSB1",
     ATCommand="/dev/ttyUSB2",
     ttyUSB3="/dev/ttyUSB3",
     ttyUSB4="/dev/ttyUSB4",
+    sim=SIM(
+        phone_number="+49160xxxxx",
+        pin="xxxx",
+        puk="xxxx",
+        apn="o2.de",
+    ),
 )
 
-modem = Modem(sim, rm520_modem)
+modem = Modem(rm520_modem)
 modem.connect()
+gc.collect()
 ```
 
 
