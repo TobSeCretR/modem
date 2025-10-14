@@ -103,7 +103,7 @@ modem.connect()
 gc.collect()
 ```
 
-## Coming Functionlity
+## Coming Functionality
 Planned features for future releases:
 - IoT Integration
 Support for sending sensor or device data over cellular networks to cloud platforms (e.g., MQTT, HTTP, or CoAP support).
