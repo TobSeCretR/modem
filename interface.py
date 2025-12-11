@@ -98,7 +98,7 @@ class ModemInterface:
         if "PIN1 state: 'enabled, not verified'" in output:
             logging.info("SIM requires PIN. Sending PIN...")
             self.run_command(
-                cmd=f"sudo qmicli -d {self.qmi} --uim-verify-pin=PIN1,{self.sim.pin}"
+                cmd=f"sudo qmicli -d {self.qmi} --uim-verify-pin=PIN1,{self.sim.pin1}"
             )
             time.sleep(2)
         elif (

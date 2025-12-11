@@ -92,8 +92,10 @@ rm520_modem = ModemInterface(
     ttyUSB4="/dev/ttyUSB4",
     sim=SIM(
         phone_number="+49160xxxxx",
-        pin="xxxx",
-        puk="xxxx",
+        pin1="xxxx",
+        pin2="xxxx",
+        puk1="xxxx",
+        puk2="xxxx",
         apn="o2.de",
     ),
 )
